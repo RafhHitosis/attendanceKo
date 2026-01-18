@@ -133,6 +133,12 @@ export const useAttendance = (dates, sectionId) => {
     [sectionId],
   );
 
+  const deleteAllStudents = useCallback(async () => {
+    if (!sectionId) return;
+    const studentsRef = ref(db, `sections/${sectionId}/students`);
+    await remove(studentsRef);
+  }, [sectionId]);
+
   const toggleAttendance = useCallback(
     async (studentId, date) => {
       if (!sectionId) return;
@@ -248,6 +254,7 @@ export const useAttendance = (dates, sectionId) => {
     addStudent,
     updateStudent,
     deleteStudent,
+    deleteAllStudents,
     addCustomHoliday,
     removeCustomHoliday,
     toggleAttendance,

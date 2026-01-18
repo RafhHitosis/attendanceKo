@@ -4,7 +4,10 @@ import { groupDatesByMonth, chunkDates } from "../utils/dateUtils";
 import { isDateHoliday } from "../utils/holidays";
 import { isNoClassDay } from "../utils/schedule";
 import clsx from "clsx";
-import { Plus, User, Trash2 } from "lucide-react";
+import { useRef, useEffect } from "react";
+import { Plus, User, Trash2, MoreVertical, Edit } from "lucide-react";
+
+// ... (props update)
 
 export default function AttendanceTable({
   dates,
@@ -13,6 +16,7 @@ export default function AttendanceTable({
   toggleAttendance,
   addStudent,
   deleteStudent,
+  editStudent,
   stats,
   sectionId,
   customHolidays,
@@ -222,6 +226,7 @@ export default function AttendanceTable({
                 totalSchoolDays={totalSchoolDays}
                 toggleAttendance={toggleAttendance}
                 deleteStudent={deleteStudent}
+                editStudent={editStudent}
               />
             ))}
           </tbody>
@@ -243,11 +248,40 @@ const StudentRow = React.memo(
     totalSchoolDays,
     toggleAttendance,
     deleteStudent,
+    editStudent,
   }) => {
     const studentStats = stats.find((s) => s.studentId === student.id) || {
       totalAbsences: 0,
       totalPresent: 0,
     };
+
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuRef = useRef(null);
+    const buttonRef = useRef(null);
+
+    // Close menu on click outside
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (
+          menuRef.current &&
+          !menuRef.current.contains(event.target) &&
+          !buttonRef.current.contains(event.target)
+        ) {
+          setIsMenuOpen(false);
+        }
+      };
+
+      if (isMenuOpen) {
+        document.addEventListener("mousedown", handleClickOutside);
+      }
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, [isMenuOpen]);
+
+    // Calculate menu position - simplified to absolute for now
+    // If table has overflow-visible it works, but it's overflow-auto.
+    // Let's use absolute but ensure high z-index.
 
     return (
       <tr className="hover:bg-slate-50 group">
@@ -256,13 +290,54 @@ const StudentRow = React.memo(
         </td>
         <td className="sticky left-12 z-10 bg-white group-hover:bg-slate-50 border border-slate-200 px-3 py-1 text-sm font-medium text-slate-700 flex justify-between items-center h-[50px]">
           <span className="truncate max-w-[150px]">{student.name}</span>
-          <button
-            onClick={() => deleteStudent(student.id)}
-            className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all"
-            title="Delete Student"
-          >
-            <Trash2 className="w-5 h-5 cursor-pointer hover:scale-110 transition-transform" />
-          </button>
+
+          <div className="relative ml-2 shrink-0">
+            <button
+              ref={buttonRef}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMenuOpen(!isMenuOpen);
+              }}
+              className={clsx(
+                "p-1 rounded-full transition-colors cursor-pointer",
+                isMenuOpen
+                  ? "bg-red-50 text-red-600"
+                  : "text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100",
+              )}
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+
+            {isMenuOpen && (
+              <div
+                ref={menuRef}
+                className="absolute left-full top-0 ml-2 z-[9999] w-32 bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200 origin-top-left"
+              >
+                <div className="flex flex-col py-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      editStudent(student);
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-emerald-600 w-full text-left transition-colors cursor-pointer"
+                  >
+                    <Edit className="w-3.5 h-3.5" /> Edit
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteStudent(student.id);
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 w-full text-left transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </td>
 
         {monthColumns.map((group) =>

@@ -8,6 +8,7 @@ export default function Header({
   schoolDaysCount,
   currentTerm,
   setTerm,
+  appTitle,
 }) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -28,7 +29,7 @@ export default function Header({
               </div>
               <div>
                 <h1 className="text-xl font-bold text-on-surface tracking-tight leading-tight">
-                  BSIT 25-26
+                  {appTitle || "Class Attendance"}
                 </h1>
                 <p className="text-[10px] text-primary font-bold uppercase tracking-wider">
                   {currentTerm} Period

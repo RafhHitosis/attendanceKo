@@ -3,9 +3,25 @@ import Header from "../components/Header";
 import AttendanceTable from "../components/AttendanceTable";
 import ConfirmModal from "../components/ConfirmModal";
 import { useAttendance } from "../hooks/useAttendance";
-import { generateMidtermDates, generateFinalsDates } from "../utils/dateUtils";
-import { ArrowLeft, Upload, CalendarPlus, FileSpreadsheet } from "lucide-react";
+import { useSettings } from "../hooks/useSettings";
+import {
+  generateMidtermDates,
+  generateFinalsDates,
+  MIDTERM_START,
+  MIDTERM_END,
+  FINALS_START,
+  FINALS_END,
+  generateDates,
+} from "../utils/dateUtils";
+import {
+  ArrowLeft,
+  Upload,
+  CalendarPlus,
+  FileSpreadsheet,
+  Settings,
+} from "lucide-react";
 import HolidayModal from "../components/HolidayModal";
+import InputModal from "../components/InputModal";
 import { exportToExcel } from "../utils/exportUtils";
 
 const STUDENTS_101 = [
@@ -185,9 +201,30 @@ const STUDENTS_202 = [
 export default function AttendancePage({ sectionId, onBack }) {
   const [term, setTerm] = useState("midterm");
 
+  const { termDates, updateTermDates, appConfig } = useSettings();
+
+  const handleUpdateTermDates = (updateAction) => {
+    // Determine new state based on whether updateAction is a function or value
+    const newDates =
+      typeof updateAction === "function"
+        ? updateAction(termDates)
+        : updateAction;
+    updateTermDates(newDates);
+  };
+
   const dates = useMemo(() => {
-    return term === "midterm" ? generateMidtermDates() : generateFinalsDates();
-  }, [term]);
+    if (term === "midterm") {
+      return generateDates(
+        new Date(termDates.midtermStart),
+        new Date(termDates.midtermEnd),
+      );
+    } else {
+      return generateDates(
+        new Date(termDates.finalsStart),
+        new Date(termDates.finalsEnd),
+      );
+    }
+  }, [term, termDates]);
 
   const {
     students,
@@ -195,7 +232,9 @@ export default function AttendancePage({ sectionId, onBack }) {
     customHolidays,
     loading,
     addStudent,
+    updateStudent,
     deleteStudent,
+    deleteAllStudents,
     toggleAttendance,
     resetAttendance,
     batchAddStudents,
@@ -214,9 +253,18 @@ export default function AttendancePage({ sectionId, onBack }) {
     isDestructive: false,
   });
 
+  const [inputModal, setInputModal] = useState({
+    isOpen: false,
+    title: "",
+    defaultValue: "",
+    onConfirm: () => {},
+  });
+
   const [isHolidayModalOpen, setIsHolidayModalOpen] = useState(false);
 
   const closeModal = () => setModal((prev) => ({ ...prev, isOpen: false }));
+  const closeInputModal = () =>
+    setInputModal((prev) => ({ ...prev, isOpen: false }));
 
   const handleResetRequest = () => {
     setModal({
@@ -226,6 +274,19 @@ export default function AttendancePage({ sectionId, onBack }) {
       isDestructive: true,
       onConfirm: () => {
         resetAttendance();
+        closeModal();
+      },
+    });
+  };
+
+  const handleDeleteAllStudentsRequest = () => {
+    setModal({
+      isOpen: true,
+      title: "Delete All Students?",
+      message: `Are you sure you want to delete ALL ${students.length} students in Section ${sectionId}? This cannot be undone.`,
+      isDestructive: true,
+      onConfirm: () => {
+        deleteAllStudents();
         closeModal();
       },
     });
@@ -241,6 +302,18 @@ export default function AttendancePage({ sectionId, onBack }) {
       onConfirm: () => {
         deleteStudent(id);
         closeModal();
+      },
+    });
+  };
+
+  const handleEditStudentRequest = (student) => {
+    setInputModal({
+      isOpen: true,
+      title: "Edit Student Name",
+      defaultValue: student.name,
+      onConfirm: (newName) => {
+        updateStudent(student.id, newName);
+        closeInputModal();
       },
     });
   };
@@ -324,12 +397,23 @@ export default function AttendancePage({ sectionId, onBack }) {
   return (
     <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
       <ConfirmModal {...modal} onCancel={closeModal} />
+      <InputModal
+        isOpen={inputModal.isOpen}
+        title={inputModal.title}
+        defaultValue={inputModal.defaultValue}
+        onConfirm={inputModal.onConfirm}
+        onCancel={closeInputModal}
+      />
       <HolidayModal
         isOpen={isHolidayModalOpen}
         onClose={() => setIsHolidayModalOpen(false)}
         customHolidays={customHolidays}
         addHoliday={addCustomHoliday}
         removeHoliday={removeCustomHoliday}
+        termDates={termDates}
+        onUpdateTermDates={handleUpdateTermDates}
+        onDeleteAllStudents={handleDeleteAllStudentsRequest}
+        hasStudents={students.length > 0}
       />
 
       <Header
@@ -337,6 +421,7 @@ export default function AttendancePage({ sectionId, onBack }) {
         schoolDaysCount={totalSchoolDays}
         currentTerm={term}
         setTerm={setTerm}
+        appTitle={appConfig?.title}
       />
 
       {/* Sub Header for Section & Back */}
@@ -374,8 +459,8 @@ export default function AttendancePage({ sectionId, onBack }) {
             onClick={() => setIsHolidayModalOpen(true)}
             className="flex items-center gap-2 text-xs bg-white text-slate-600 px-3 py-1.5 rounded-lg border border-slate-200 font-bold hover:bg-slate-50 hover:text-emerald-700 transition-colors shadow-sm cursor-pointer"
           >
-            <CalendarPlus className="w-4 h-4" />
-            Manage Holidays
+            <Settings className="w-4 h-4" />
+            Settings
           </button>
         </div>
       </div>
@@ -401,6 +486,7 @@ export default function AttendancePage({ sectionId, onBack }) {
                 toggleAttendance={toggleAttendance}
                 addStudent={addStudent}
                 deleteStudent={handleDeleteStudentRequest}
+                editStudent={handleEditStudentRequest}
                 stats={stats}
                 sectionId={sectionId}
                 customHolidays={customHolidays}
