@@ -439,7 +439,7 @@ export default function AttendancePage({ sectionId, onBack }) {
         {hasImportableList && (
           <button
             onClick={handleImport}
-            className="flex items-center gap-2 ml-4 text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-100 font-bold hover:bg-emerald-100"
+            className="flex items-center gap-2 ml-4 text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-100 font-bold hover:bg-emerald-100 cursor-pointer"
           >
             <Upload className="w-3 h-3" />
             Load Class List

@@ -437,7 +437,7 @@ const StudentRow = React.memo(
                         ? "bg-slate-100 cursor-not-allowed"
                         : isAbs1
                           ? "bg-red-500 hover:bg-red-600"
-                          : "hover:bg-blue-200 group-hover:bg-blue-100", // Enhanced hover
+                          : "hover:bg-blue-200 group-hover:bg-blue-200", // Enhanced hover
                       status1.isHoliday && "bg-red-100",
                     )}
                     onClick={() =>
@@ -461,7 +461,7 @@ const StudentRow = React.memo(
                           ? "bg-slate-100 cursor-not-allowed"
                           : isAbs2
                             ? "bg-red-500 hover:bg-red-600"
-                            : "hover:bg-blue-200 group-hover:bg-blue-100", // Enhanced hover
+                            : "hover:bg-blue-200 group-hover:bg-blue-200", // Enhanced hover
                         status2.isHoliday && "bg-red-100",
                       )}
                       onClick={() =>

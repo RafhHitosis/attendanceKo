@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { db } from "../lib/firebase";
-import { ref, onValue, set, update } from "firebase/database";
+import { db } from "../lib/hybrid-db";
+import { ref, onValue, set } from "../lib/hybrid-db";
 import {
   MIDTERM_START,
   MIDTERM_END,

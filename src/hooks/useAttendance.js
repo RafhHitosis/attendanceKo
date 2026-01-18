@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { db } from "../lib/firebase";
-import { ref, onValue, set, push, remove } from "firebase/database";
+import { db } from "../lib/hybrid-db";
+import { ref, onValue, set, push, remove } from "../lib/hybrid-db";
 import { format, isSunday, isSaturday } from "date-fns";
 import { isDateHoliday } from "../utils/holidays";
 import { isNoClassDay } from "../utils/schedule";
