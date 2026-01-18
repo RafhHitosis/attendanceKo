@@ -25,6 +25,7 @@ export const useSettings = () => {
   const [appConfig, setAppConfig] = useState({
     title: "BSIT 25-26",
     sections: DEFAULT_SECTIONS,
+    schedules: {},
   });
 
   const [loading, setLoading] = useState(true);
@@ -40,6 +41,7 @@ export const useSettings = () => {
         setAppConfig({
           title: data.appTitle || "BSIT 25-26",
           sections: data.sections || DEFAULT_SECTIONS,
+          schedules: data.classSchedules || {},
         });
       }
       setLoading(false);
@@ -59,12 +61,17 @@ export const useSettings = () => {
     await set(ref(db, "config/sections"), sections);
   }, []);
 
+  const updateClassSchedules = useCallback(async (schedules) => {
+    await set(ref(db, "config/classSchedules"), schedules);
+  }, []);
+
   return {
     termDates,
     updateTermDates,
     appConfig,
     updateAppTitle,
     updateSections,
+    updateClassSchedules,
     loading,
   };
 };

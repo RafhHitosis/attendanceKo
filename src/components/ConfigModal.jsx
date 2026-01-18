@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { X, Plus, Trash2, Save, Edit2, Settings } from "lucide-react";
+import {
+  X,
+  Plus,
+  Trash2,
+  Save,
+  Edit2,
+  Settings,
+  Calendar,
+  CheckSquare,
+  Square,
+} from "lucide-react";
 import ConfirmModal from "./ConfirmModal";
 
 export default function ConfigModal({ isOpen, onClose, config, onSave }) {
@@ -19,6 +29,12 @@ export default function ConfigModal({ isOpen, onClose, config, onSave }) {
     onConfirm: () => {},
   });
 
+  const [scheduleModal, setScheduleModal] = useState({
+    isOpen: false,
+    sectionId: "",
+    days: [], // [0, 1, 2...]
+  });
+
   // Initialize helper state on open
   React.useEffect(() => {
     if (isOpen && config) {
@@ -32,6 +48,45 @@ export default function ConfigModal({ isOpen, onClose, config, onSave }) {
     setDeleteModal((prev) => ({ ...prev, isOpen: false }));
   const closeInputModal = () =>
     setInputModal((prev) => ({ ...prev, isOpen: false }));
+  const closeScheduleModal = () =>
+    setScheduleModal((prev) => ({ ...prev, isOpen: false }));
+
+  const handleEditScheduleRequest = (sectionId) => {
+    const currentSchedule = localConfig.schedules?.[sectionId] || [
+      1, 2, 3, 4, 5,
+    ]; // Default Mon-Fri
+    setScheduleModal({
+      isOpen: true,
+      sectionId,
+      days: currentSchedule,
+    });
+  };
+
+  const handleScheduleToggle = (dayIndex) => {
+    setScheduleModal((prev) => {
+      const currentDays = prev.days;
+      if (currentDays.includes(dayIndex)) {
+        return {
+          ...prev,
+          days: currentDays.filter((d) => d !== dayIndex).sort(),
+        };
+      } else {
+        return { ...prev, days: [...currentDays, dayIndex].sort() };
+      }
+    });
+  };
+
+  const executeSaveSchedule = () => {
+    const { sectionId, days } = scheduleModal;
+    setLocalConfig((prev) => ({
+      ...prev,
+      schedules: {
+        ...prev.schedules,
+        [sectionId]: days,
+      },
+    }));
+    closeScheduleModal();
+  };
 
   const handleTitleChange = (e) => {
     setLocalConfig((prev) => ({ ...prev, title: e.target.value }));
@@ -50,7 +105,7 @@ export default function ConfigModal({ isOpen, onClose, config, onSave }) {
   const executeRenameYear = (oldName, newName) => {
     if (oldName === newName) return;
     if (localConfig.sections[newName]) {
-      alert("Year name already exists!"); // Keep alert for validation or use a toast if available? Alert is fine for simple validation fallback, or I could just do nothing.
+      alert("Year name already exists!");
       return;
     }
 
@@ -113,7 +168,7 @@ export default function ConfigModal({ isOpen, onClose, config, onSave }) {
   const executeAddSection = (yearName, sectionName) => {
     if (sectionName) {
       const currentSections = localConfig.sections[yearName] || [];
-      if (currentSections.includes(sectionName)) return; // prevent dupes
+      if (currentSections.includes(sectionName)) return;
       handleSectionChange(yearName, [...currentSections, sectionName].sort());
     }
     closeInputModal();
@@ -180,6 +235,77 @@ export default function ConfigModal({ isOpen, onClose, config, onSave }) {
         isDestructive={true}
         confirmText="Delete"
       />
+
+      {/* Schedule Modal */}
+      {scheduleModal.isOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/20 backdrop-blur-[1px]">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm animate-in zoom-in-95 duration-200 border border-slate-200">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-bold text-slate-800 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-emerald-600" />
+                Schedule: Section {scheduleModal.sectionId}
+              </h4>
+              <button
+                onClick={closeScheduleModal}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 mb-3">
+              Select class days for this section.
+            </p>
+
+            <div className="space-y-2 mb-6">
+              {[
+                "Sunday",
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+              ].map((day, idx) => {
+                const isSelected = scheduleModal.days.includes(idx);
+                return (
+                  <div
+                    key={day}
+                    onClick={() => handleScheduleToggle(idx)}
+                    className={`flex items-center p-2 rounded-lg cursor-pointer border transition-all ${isSelected ? "bg-emerald-50 border-emerald-200" : "hover:bg-slate-50 border-transparent"}`}
+                  >
+                    <div
+                      className={`w-5 h-5 rounded flex items-center justify-center mr-3 transition-colors ${isSelected ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-300"}`}
+                    >
+                      {isSelected && <CheckSquare className="w-4 h-4" />}
+                    </div>
+                    <span
+                      className={`text-sm font-medium ${isSelected ? "text-emerald-900" : "text-slate-600"}`}
+                    >
+                      {day}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={closeScheduleModal}
+                className="px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 rounded cursor-pointer font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeSaveSchedule}
+                className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded hover:bg-emerald-700 cursor-pointer font-bold"
+              >
+                Save Schedule
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Input Modal */}
       {inputModal.isOpen && (
@@ -301,10 +427,18 @@ export default function ConfigModal({ isOpen, onClose, config, onSave }) {
                           </span>
                           <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity gap-1">
                             <button
+                              onClick={() => handleEditScheduleRequest(section)}
+                              className="text-slate-400 hover:text-blue-600 cursor-pointer"
+                              title="Edit Schedule"
+                            >
+                              <Calendar className="w-3 h-3" />
+                            </button>
+                            <button
                               onClick={() =>
                                 handleRenameSectionRequest(yearName, section)
                               }
                               className="text-slate-400 hover:text-emerald-600 cursor-pointer"
+                              title="Rename Section"
                             >
                               <Edit2 className="w-3 h-3" />
                             </button>
@@ -313,6 +447,7 @@ export default function ConfigModal({ isOpen, onClose, config, onSave }) {
                                 handleDeleteSectionRequest(yearName, section)
                               }
                               className="text-slate-400 hover:text-red-600 cursor-pointer"
+                              title="Delete Section"
                             >
                               <X className="w-3 h-3" />
                             </button>

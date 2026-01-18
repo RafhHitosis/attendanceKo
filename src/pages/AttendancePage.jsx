@@ -478,21 +478,20 @@ export default function AttendancePage({ sectionId, onBack }) {
       ) : (
         <main className="flex-1 overflow-hidden flex flex-col p-2 md:p-4 max-w-[1920px] mx-auto w-full">
           <div className="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden relative">
-            <div className="flex-1 overflow-auto relative">
-              <AttendanceTable
-                dates={dates}
-                students={students}
-                attendance={attendance}
-                toggleAttendance={toggleAttendance}
-                addStudent={addStudent}
-                deleteStudent={handleDeleteStudentRequest}
-                editStudent={handleEditStudentRequest}
-                stats={stats}
-                sectionId={sectionId}
-                customHolidays={customHolidays}
-                totalSchoolDays={totalSchoolDays}
-              />
-            </div>
+            <AttendanceTable
+              dates={dates}
+              students={students}
+              attendance={attendance}
+              toggleAttendance={toggleAttendance}
+              addStudent={addStudent}
+              deleteStudent={handleDeleteStudentRequest}
+              editStudent={handleEditStudentRequest}
+              stats={stats}
+              sectionId={sectionId}
+              customHolidays={customHolidays}
+              totalSchoolDays={totalSchoolDays}
+              schedules={appConfig?.schedules}
+            />
           </div>
         </main>
       )}

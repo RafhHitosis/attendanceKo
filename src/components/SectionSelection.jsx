@@ -7,11 +7,20 @@ import ConfigModal from "./ConfigModal";
 export default function SectionSelection({ onSelectSection }) {
   const [selectedYear, setSelectedYear] = useState(null);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const { appConfig, updateAppTitle, updateSections, loading } = useSettings();
+  const {
+    appConfig,
+    updateAppTitle,
+    updateSections,
+    updateClassSchedules,
+    loading,
+  } = useSettings();
 
   const handleSaveConfig = async (newConfig) => {
     await updateAppTitle(newConfig.title);
     await updateSections(newConfig.sections);
+    if (newConfig.schedules) {
+      await updateClassSchedules(newConfig.schedules);
+    }
     // If the currently selected year was deleted/renamed, reset selection
     if (selectedYear && !newConfig.sections[selectedYear]) {
       setSelectedYear(null);
